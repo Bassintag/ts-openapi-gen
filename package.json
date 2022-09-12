@@ -1,7 +1,7 @@
 {
   "name": "ts-openapi-gen",
   "description": "An easy to use cli to generate typescript from Open API specifications",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "type": "module",
   "author": "@bassintag",
   "scripts": {
