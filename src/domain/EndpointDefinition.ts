@@ -7,7 +7,8 @@ export interface ParamDefinition {
 
 export interface BodyDefinition {
   type: string;
-  isArray: boolean;
+  isArrayBuffer?: boolean;
+  isArray?: boolean;
   serializer?: string;
 }
 
@@ -19,6 +20,10 @@ export interface PathPartDefinition {
 export interface MethodDefinition {
   name: string;
 
+  description?: string[];
+
+  capitalizedName: string;
+
   path: PathPartDefinition[];
 
   method: string;
@@ -27,11 +32,15 @@ export interface MethodDefinition {
 
   responseType: string;
 
+  isBinary: boolean;
+
   params: ParamDefinition[];
 
   queryParams: ParamDefinition[];
 }
 
 export interface EndpointDefinition extends Definition {
+  description?: string[];
+
   methods: MethodDefinition[];
 }

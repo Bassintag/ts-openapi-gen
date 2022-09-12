@@ -10,6 +10,8 @@ import fs from "fs";
 import {parseEndpoints} from "./utils/parseEndpoints.js";
 import chalk from "chalk";
 import {ClientDefinition} from "./domain/ClientDefiniton";
+import {parseResponse} from "./utils/parseResponse.js";
+import {uncapitalize} from "./utils/capitalize.js";
 
 program
   .name('tsgen')
@@ -39,8 +41,9 @@ const start = async () => {
   const spinner = ora('Fetching OpenAPI document').start();
   const doc = await fetchSpecification(openApiUrl);
   spinner.text = 'Parsing document';
-  const dtos = Object.entries(doc.components?.schemas ?? {})
-    .map((args) => parseDto(...args));
+  const schemas = Object.entries(doc.components?.schemas ?? {}).map((args) => parseDto(doc, ...args));
+  const responses = Object.entries(doc.components?.responses ?? {}).map((args) => parseResponse(doc, ...args));
+  const dtos = [...schemas, ...responses];
   const endpoints = parseEndpoints(doc);
   spinner.stop();
 
@@ -75,7 +78,7 @@ const start = async () => {
   if (features.includes('Client')) {
     const clientDefinition: ClientDefinition = {
       endpoints: endpoints.map((definition) => ({
-        name: definition.name.replace(/Endpoint$/, '').toLowerCase(),
+        name: uncapitalize(definition.name.replace(/Endpoint$/, '')),
         definition,
       }))
     };

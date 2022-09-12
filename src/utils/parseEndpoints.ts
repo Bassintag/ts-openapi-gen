@@ -7,8 +7,30 @@ import {
   PathPartDefinition
 } from "../domain/EndpointDefinition";
 import {parseType} from "./parseType.js";
-import {capitalize} from "./capitalize.js";
+import {capitalize, uncapitalize} from "./capitalize.js";
 import {distinct} from "./distinct.js";
+import {formatName} from "./formatName.js";
+import {resolveRef} from "./resolveRef.js";
+import {parseDescription} from "./parseDescription.js";
+
+const parseResponseType = (doc: OpenAPIV3_1.Document, status: OpenAPIV3_1.ResponseObject | OpenAPIV3_1.ReferenceObject): [string, string[], boolean] => {
+  if ('$ref' in status) {
+    const [, , isBinary] = parseResponseType(doc, resolveRef(doc, status.$ref));
+    const [type, imports] = parseType(status);
+    return [type, imports, isBinary];
+  } else if ('content' in status && status.content != null) {
+    if (status.content['application/json']?.schema != null) {
+      return [...parseType(status.content['application/json']?.schema), false];
+    } else if (status.content['application/octet-stream']) {
+      if (status.content['application/octet-stream']?.schema) {
+        return [...parseType(status.content['application/octet-stream'].schema), true];
+      } else {
+        return ['ArrayBuffer', [], true]
+      }
+    }
+  }
+  return ['void', [], false];
+}
 
 export const parseEndpoints = (doc: OpenAPIV3_1.Document) => {
   const endpoints: EndpointDefinition[] = [];
@@ -25,24 +47,25 @@ export const parseEndpoints = (doc: OpenAPIV3_1.Document) => {
         if (!operation.tags?.includes(tag.name) || operation.operationId == null) {
           continue;
         }
+        let responseIsBinary: boolean = false;
         let responseType: string = 'unknown';
-        if ('200' in operation.responses) {
-          const status = operation.responses['200'];
-          if ('content' in status && status.content != null) {
-            const schema = status.content['application/json']?.schema;
-            if (schema != null) {
-              const [type, imports] = parseType(schema);
-              responseType = type;
-              endpointImports.push(...imports);
-            }
+        let response: OpenAPIV3_1.ResponseObject | undefined
+        for (let i = 0; i < 4; i += 1) {
+          const response = operation.responses[`20${i}`];
+          if (response != null) {
+            const [type, imports, isBinary] = parseResponseType(doc, response);
+            responseType = type;
+            endpointImports.push(...imports);
+            responseIsBinary = isBinary;
+            break;
           }
-        } else if ('201' in operation.responses) {
-          responseType = 'void';
         }
-
         const queryParams: ParamDefinition[] = [];
         const params: ParamDefinition[] = [];
-        for (const parameter of operation.parameters ?? []) {
+        for (let parameter of operation.parameters ?? []) {
+          if ("$ref" in parameter) {
+            parameter = resolveRef(doc, parameter.$ref)
+          }
           if ('in' in parameter) {
             let array: ParamDefinition[] | undefined;
             switch (parameter.in) {
@@ -68,7 +91,7 @@ export const parseEndpoints = (doc: OpenAPIV3_1.Document) => {
             end = pathCopy.indexOf('}');
             if (end < 0) {
               end = pathCopy.length;
-            } else{
+            } else {
               isVariable = true
             }
           }
@@ -82,11 +105,11 @@ export const parseEndpoints = (doc: OpenAPIV3_1.Document) => {
 
         let body: BodyDefinition | undefined;
         if (operation.requestBody != null && 'content' in operation.requestBody) {
-          const bodySchema = operation.requestBody?.content?.['application/json']?.schema;
-          if (bodySchema != null) {
-            const [type, imports] = parseType(bodySchema);
+          const content = operation.requestBody?.content;
+          if ((content['application/json']?.schema) != null) {
+            const [type, imports] = parseType(content['application/json']?.schema);
             let serializer: string | undefined;
-            if (imports.length > 0){
+            if (imports.length > 0) {
               serializer = `serialize${imports[0]}`;
               endpointImports.push(serializer);
             }
@@ -96,12 +119,20 @@ export const parseEndpoints = (doc: OpenAPIV3_1.Document) => {
               serializer,
               isArray: type.endsWith('[]')
             };
+          } else if (content['application/octet-stream'] != null) {
+            body = {
+              type: 'ArrayBuffer',
+              isArrayBuffer: true,
+            };
           }
         }
 
         methodDefinitions.push({
-          name: operation.operationId,
+          name: uncapitalize(operation.operationId),
+          capitalizedName: capitalize(operation.operationId),
+          description: parseDescription(operation.description ?? operation.summary),
           path: pathParts,
+          isBinary: responseIsBinary,
           body,
           method,
           responseType,
@@ -111,8 +142,11 @@ export const parseEndpoints = (doc: OpenAPIV3_1.Document) => {
       }
     }
 
+    const name = formatName(tag.name);
+
     endpoints.push({
-      name: `${capitalize(tag.name)}Endpoint`,
+      name: `${name}Endpoint`,
+      description: parseDescription(tag.description),
       methods: methodDefinitions,
       imports: distinct(endpointImports).sort(),
     });

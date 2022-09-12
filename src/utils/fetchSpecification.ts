@@ -1,8 +1,9 @@
 import fetch from 'node-fetch';
 import {OpenAPIV3_1} from "openapi-types";
 import * as yaml from 'yaml';
+import fs from "fs";
 
-export const fetchSpecification = async (url: string) => {
+const fetchSpecificationFromRemote = async (url: string) => {
   const response = await fetch(url, {
     headers: {
       'Accept': 'application/json'
@@ -13,8 +14,18 @@ export const fetchSpecification = async (url: string) => {
     throw new Error('Invalid response from server');
   }
 
-  let document: OpenAPIV3_1.Document
-  const body = await response.text();
+  return await response.text();
+}
+
+export const fetchSpecification = async (urlOrPath: string) => {
+  let body: string;
+  if (urlOrPath.match(/^https?:\/\//i)) {
+    body = await fetchSpecificationFromRemote(urlOrPath);
+  } else {
+    body = await fs.promises.readFile(urlOrPath, 'utf-8');
+  }
+
+  let document: OpenAPIV3_1.Document;
 
   try {
     document = JSON.parse(body);
