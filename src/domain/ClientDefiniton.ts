@@ -1,4 +1,4 @@
-import {EndpointDefinition} from "./EndpointDefinition";
+import {EndpointDefinition} from "./EndpointDefinition.js";
 
 export interface ClientDefinition {
   endpoints: {

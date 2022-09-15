@@ -5,7 +5,7 @@ import {
   MethodDefinition,
   ParamDefinition,
   PathPartDefinition
-} from "../domain/EndpointDefinition";
+} from "../domain/EndpointDefinition.js";
 import {parseType} from "./parseType.js";
 import {capitalize, uncapitalize} from "./capitalize.js";
 import {distinct} from "./distinct.js";

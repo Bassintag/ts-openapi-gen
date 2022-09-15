@@ -1,5 +1,5 @@
 import {OpenAPIV3_1} from "openapi-types";
-import {DtoDefinition} from "../domain/DtoDefinition";
+import {DtoDefinition} from "../domain/DtoDefinition.js";
 import {distinct} from "./distinct.js";
 import {parseProperties} from "./parseProperties.js";
 import {parseType} from "./parseType.js";

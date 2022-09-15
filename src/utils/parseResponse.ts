@@ -1,5 +1,5 @@
 import {OpenAPIV3_1} from "openapi-types";
-import {DtoDefinition} from "../domain/DtoDefinition";
+import {DtoDefinition} from "../domain/DtoDefinition.js";
 import {parseDto} from "./parseDto.js";
 
 export const parseResponse = (

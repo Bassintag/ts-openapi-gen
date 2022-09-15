@@ -9,7 +9,7 @@ import {renderTemplate} from "./utils/renderTemplate.js";
 import fs from "fs";
 import {parseEndpoints} from "./utils/parseEndpoints.js";
 import chalk from "chalk";
-import {ClientDefinition} from "./domain/ClientDefiniton";
+import {ClientDefinition} from "./domain/ClientDefiniton.js";
 import {parseResponse} from "./utils/parseResponse.js";
 import {uncapitalize} from "./utils/capitalize.js";
 
