@@ -1,3 +1,1 @@
-export const generateIndex = (files: string[]) => {
-
-}
+export const generateIndex = (files: string[]) => {};

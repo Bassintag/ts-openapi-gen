@@ -1,4 +1,4 @@
-import {Definition} from "./Definition.js";
+import { Definition } from "./Definition.js";
 
 export interface ParamDefinition {
   name: string;

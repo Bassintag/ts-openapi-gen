@@ -1,5 +1,5 @@
-import mustache from 'mustache';
-import fs from 'fs';
+import mustache from "mustache";
+import fs from "fs";
 import path from "path";
 
 const templatesCache: Record<string, string> = {};
@@ -9,10 +9,13 @@ export const renderTemplate = (
   templatesDirPath: string,
   templateName: string,
   params: unknown,
-  to: string,
+  to: string
 ) => {
   if (!(templateName in templatesCache)) {
-    templatesCache[templateName] = fs.readFileSync(path.join(templatesDirPath, `${templateName}.mustache`), 'utf-8');
+    templatesCache[templateName] = fs.readFileSync(
+      path.join(templatesDirPath, `${templateName}.mustache`),
+      "utf-8"
+    );
   }
   const rendered = mustache.render(templatesCache[templateName], params).trim();
   const dir = path.dirname(to);
@@ -23,4 +26,4 @@ export const renderTemplate = (
     initDir.push(dir);
   }
   fs.writeFileSync(to, rendered);
-}
+};

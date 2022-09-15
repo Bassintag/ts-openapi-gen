@@ -3,4 +3,4 @@ export const parseDescription = (description: string | undefined) => {
     return [];
   }
   return description.split(/\n+/g).filter((s) => !s.match(/^\s*$/));
-}
+};
