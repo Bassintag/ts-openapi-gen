@@ -1,4 +1,4 @@
-import { OpenAPIV3_1 } from "openapi-types";
+import {OpenAPIV3_1} from "openapi-types";
 import {
   BodyDefinition,
   EndpointDefinition,
@@ -6,12 +6,12 @@ import {
   ParamDefinition,
   PathPartDefinition,
 } from "../domain/EndpointDefinition.js";
-import { parseType } from "./parseType.js";
-import { capitalize, uncapitalize } from "./capitalize.js";
-import { distinct } from "./distinct.js";
-import { formatName } from "./formatName.js";
-import { resolveRef } from "./resolveRef.js";
-import { parseDescription } from "./parseDescription.js";
+import {parseType} from "./parseType.js";
+import {capitalize, uncapitalize} from "./capitalize.js";
+import {distinct} from "./distinct.js";
+import {formatName} from "./formatName.js";
+import {resolveRef} from "./resolveRef.js";
+import {parseDescription} from "./parseDescription.js";
 
 const parseResponseType = (
   doc: OpenAPIV3_1.Document,
@@ -24,14 +24,17 @@ const parseResponseType = (
   } else if ("content" in status && status.content != null) {
     if (status.content["application/json"]?.schema != null) {
       return [...parseType(status.content["application/json"]?.schema), false];
-    } else if (status.content["application/octet-stream"]) {
-      if (status.content["application/octet-stream"]?.schema) {
-        return [
-          ...parseType(status.content["application/octet-stream"].schema),
-          true,
-        ];
-      } else {
-        return ["ArrayBuffer", [], true];
+    } else {
+      const content = status.content["application/octet-stream"] ?? status.content["octet-stream"]
+      if (content != null) {
+        if (content.schema) {
+          return [
+            ...parseType(content.schema),
+            true,
+          ];
+        } else {
+          return ["ArrayBuffer", [], true];
+        }
       }
     }
   }
@@ -63,8 +66,7 @@ export const parseEndpoints = (doc: OpenAPIV3_1.Document) => {
           continue;
         }
         let responseIsBinary: boolean = false;
-        let responseType: string = "unknown";
-        let response: OpenAPIV3_1.ResponseObject | undefined;
+        let responseType: string | undefined;
         for (let i = 0; i < 4; i += 1) {
           const response = operation.responses[`20${i}`];
           if (response != null) {
@@ -142,12 +144,19 @@ export const parseEndpoints = (doc: OpenAPIV3_1.Document) => {
               serializer,
               isArray: type.endsWith("[]"),
             };
-          } else if (content["application/octet-stream"] != null) {
+          } else if (content["application/octet-stream"] != null || content["octet-stream"] != null) {
             body = {
               type: "ArrayBuffer",
               isArrayBuffer: true,
             };
           }
+        }
+
+        let auth: string | undefined;
+        if (operation.security == null) {
+          auth = Object.keys(doc.security?.[0] ?? {})[0];
+        } else if (operation.security.length > 0) {
+          auth = Object.keys(operation.security[0])[0];
         }
 
         methodDefinitions.push({
@@ -158,6 +167,7 @@ export const parseEndpoints = (doc: OpenAPIV3_1.Document) => {
           ),
           path: pathParts,
           isBinary: responseIsBinary,
+          auth,
           body,
           method,
           responseType,

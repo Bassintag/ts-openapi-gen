@@ -28,9 +28,11 @@ export interface MethodDefinition {
 
   method: string;
 
+  auth?: string;
+
   body?: BodyDefinition;
 
-  responseType: string;
+  responseType?: string;
 
   isBinary: boolean;
 

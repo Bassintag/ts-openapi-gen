@@ -2,8 +2,38 @@
 
 import { {{#endpoints}}{{definition.name}}, {{/endpoints}} } from '.';
 
+export interface EndpointFetchResponse {
+  arrayBuffer: () => Promise<ArrayBuffer>;
+  text: () => Promise<string>;
+}
+
+export interface EndpointFetchOptions {
+  method?: string;
+  body?: string | ArrayBuffer;
+  headers?: Record<string, string>;
+  auth?: string
+}
+
+export type EndpointFetchApi = (
+    url: string,
+    options?: EndpointFetchOptions
+) => Promise<EndpointFetchResponse>;
+
+export interface FetchResponse extends EndpointFetchResponse {
+  ok: boolean;
+}
+
+export interface FetchOptions extends EndpointFetchOptions {
+}
+
+export type FetchApi = (
+  url: string,
+  options?: FetchOptions
+) => Promise<FetchResponse>;
+
 export interface ClientOptions {
     baseUrl?: string;
+    fetch?: FetchApi;
 }
 
 export class Client {
@@ -12,9 +42,20 @@ export class Client {
     readonly {{name}}: {{definition.name}};
 
     {{/endpoints}}
-    constructor({ baseUrl }: ClientOptions = {}) {
+    constructor({ baseUrl, fetch = window.fetch }: ClientOptions = {}) {
+        const wrappedFetch = this.wrapFetch(fetch);
         {{#endpoints}}
-        this.{{name}} = new {{definition.name}}({ baseUrl });
+        this.{{name}} = new {{definition.name}}({ baseUrl, fetch: wrappedFetch });
         {{/endpoints}}
+    }
+
+    private wrapFetch(fetch: FetchApi): EndpointFetchApi {
+        return async (url, options) => {
+            const response = await fetch(url, options);
+            if (!response.ok) {
+              throw response;
+            }
+            return response;
+        };
     }
 }
