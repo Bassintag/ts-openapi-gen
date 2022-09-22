@@ -62,8 +62,16 @@ export class {{name}} {
             body: {{^isArrayBuffer}}JSON.stringify({{/isArrayBuffer}}{{#isArray}}body.map((item) => {{/isArray}}{{#serializer}}{{.}}({{/serializer}}{{#isArray}}item{{/isArray}}{{^isArray}}body{{/isArray}}{{#isArray}}){{/isArray}}{{#serializer}}){{/serializer}}{{^isArrayBuffer}}){{/isArrayBuffer}},
         {{/body}}
         {{#auth}}
-            auth: '{{auth}}'
+            auth: '{{auth}}',
         {{/auth}}
+            headers: {
+        {{#isBinary}}
+                'Accept': 'application/octet-stream',
+        {{/isBinary}}
+        {{^isBinary}}
+                'Accept': 'application/json',
+        {{/isBinary}}
+            }
         });
         {{#responseType}}
 
