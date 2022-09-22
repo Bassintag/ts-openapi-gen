@@ -168,7 +168,7 @@ export const parseEndpoints = (doc: OpenAPIV3_1.Document) => {
           isBinary: responseIsBinary,
           auth,
           body,
-          method,
+          method: method.toUpperCase(),
           responseType,
           params,
           queryParams,
