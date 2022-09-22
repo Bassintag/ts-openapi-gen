@@ -106,14 +106,13 @@ export const parseEndpoints = (doc: OpenAPIV3_1.Document) => {
         let pathCopy = path.replace(/^\//, "");
         do {
           let isVariable = false;
-          let end = pathCopy.indexOf("{");
+          const openIdx = pathCopy.indexOf("{");
+          const closeIdx = pathCopy.indexOf("}");
+          let end = openIdx === -1 ? closeIdx : Math.min(openIdx, closeIdx);
           if (end < 0) {
-            end = pathCopy.indexOf("}");
-            if (end < 0) {
-              end = pathCopy.length;
-            } else {
-              isVariable = true;
-            }
+            end = pathCopy.length;
+          } else {
+            isVariable = closeIdx === end;
           }
           const value = pathCopy.slice(0, end);
           pathParts.push({
