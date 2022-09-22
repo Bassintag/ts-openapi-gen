@@ -65,6 +65,14 @@ export class {{name}} {
             auth: '{{auth}}',
         {{/auth}}
             headers: {
+        {{#body}}
+            {{#isArrayBuffer}}
+                'Content-Type': 'application/octet-stream',
+            {{/isArrayBuffer}}
+            {{^isArrayBuffer}}
+                'Content-Type': 'application/json',
+            {{/isArrayBuffer}}
+        {{/body}}
         {{#isBinary}}
                 'Accept': 'application/octet-stream',
         {{/isBinary}}
