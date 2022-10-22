@@ -211,7 +211,6 @@ export class Method implements ModelsHolder {
         } else {
           name = `${this.capitalizedName}Body`;
         }
-        console.log(contentType, schema, name)
         this.bodies.push(
           new MediaTypeModel(this.doc, contentType, name, schema)
         );
