@@ -85,6 +85,9 @@ export class {{capitalizedName}}Endpoint {
             {{#hasOneBody}}
             body: {{#body.serialize}}{{#body.model.name}}serialize{{body.model.name}}({{/body.model.name}}body{{#body.model.name}}){{/body.model.name}}{{/body.serialize}},
             {{/hasOneBody}}
+            {{#auth}}
+            auth: "{{auth}}"
+            {{/auth}}
         });
         {{#hasOneReturn}}
 

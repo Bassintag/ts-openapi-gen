@@ -77,6 +77,7 @@ const validResponseCodes = ['200', '201', '202', '203', '204', '205', '206'];
 
 export class Method implements ModelsHolder {
 
+  auth?: string;
   name?: string;
   capitalizedName?: string;
   readonly uppercaseMethod: string;
@@ -152,7 +153,7 @@ export class Method implements ModelsHolder {
     readonly method: string,
   ) {
     this.uppercaseMethod = method.toUpperCase();
-    this.templatedPath = path.replace(/\{(.*?)}/g, '${$1}');
+    this.templatedPath = path.replace(/\{(.*?)}/g, '${$1}').replace(/^\//, '');
     this.params = [];
     this.queryParams = [];
     this.bodies = [];
@@ -169,6 +170,12 @@ export class Method implements ModelsHolder {
     if (methodObject.operationId != null) {
       this.name = uncapitalize(methodObject.operationId);
       this.capitalizedName = capitalize(this.name);
+    }
+    const docSecurity = this.doc.security;
+    if (docSecurity && docSecurity.length > 0) {
+      if (methodObject.security == null) {
+        this.auth = Object.keys(docSecurity[0])[0];
+      }
     }
 
     // Parse params
